@@ -28,3 +28,5 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // ✅ Routes
 app.use('/api/auth', authRoutes);
+
+
