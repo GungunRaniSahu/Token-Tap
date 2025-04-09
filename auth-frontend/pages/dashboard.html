@@ -1,23 +1,252 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Customizing the scrollbar for better appearance */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: #ccc;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: #aaa;
+    }
+  </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center">
-  <div class="bg-white p-8 shadow-xl rounded-2xl w-full max-w-md text-center">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Welcome to the Dashboard!</h2>
-    <button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">Logout</button>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+  <!-- Main Container -->
+  <div class="bg-white p-12 shadow-lg rounded-2xl w-full max-w-7xl mx-auto mt-12">
+    <h2 class="text-4xl font-bold text-gray-800 mb-12 text-center">Welcome to Your Dashboard!</h2>
+
+    <!-- Chart Containers -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 mb-12">
+      <!-- Bar Chart -->
+      <div class="p-8 bg-gradient-to-r from-pink-100 to-yellow-100 text-gray-800 rounded-xl shadow-xl hover:scale-105 transform transition-all duration-300">
+        <h3 class="text-2xl font-semibold mb-6 text-gray-700">Monthly Sales</h3>
+        <canvas id="myBarChart"></canvas>
+      </div>
+
+      <!-- Line Chart -->
+      <div class="p-8 bg-gradient-to-r from-blue-100 to-green-100 text-gray-800 rounded-xl shadow-xl hover:scale-105 transform transition-all duration-300">
+        <h3 class="text-2xl font-semibold mb-6 text-gray-700">Website Traffic</h3>
+        <canvas id="myLineChart"></canvas>
+      </div>
+
+      <!-- Pie Chart -->
+      <div class="p-8 bg-gradient-to-r from-lime-100 to-teal-100 text-gray-800 rounded-xl shadow-xl hover:scale-105 transform transition-all duration-300">
+        <h3 class="text-2xl font-semibold mb-6 text-gray-700">Market Share</h3>
+        <canvas id="myPieChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Settings and Logout Buttons -->
+    <div class="flex justify-between gap-8">
+      <button id="settingsBtn" class="bg-blue-600 text-white px-8 py-4 rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 w-full md:w-auto">Settings</button>
+      <button id="logoutBtn" class="bg-red-600 text-white px-8 py-4 rounded-lg shadow-md hover:bg-red-700 transition-all duration-300 w-full md:w-auto">Logout</button>
+    </div>
   </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-12 rounded-lg w-96 shadow-xl transform scale-95 hover:scale-100 transition-all duration-300">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-6">Settings</h2>
+
+      <!-- Dark Mode Toggle -->
+      <div class="flex items-center mb-8">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1M3 12H2m10 0h1m4 0h1m-2 6.27a4.004 4.004 0 00-6.242-3.72 4.004 4.004 0 00-6.242 3.72M16 12a4.004 4.004 0 00-2.828-3.708 4.004 4.004 0 00-3.824-4.65C8.347 3.82 6.5 4.285 6 6.293A4.004 4.004 0 004 12c0 2.21 1.79 4 4 4h8a4 4 0 004-4z" />
+        </svg>
+        <label for="themeToggle" class="text-lg font-medium text-gray-700">Dark Mode</label>
+        <input type="checkbox" id="themeToggle" class="ml-4 h-8 w-8 border-gray-400 rounded-md focus:ring-2 focus:ring-blue-500" />
+      </div>
+
+      <!-- Account Deletion Section -->
+      <div class="flex items-center mb-8">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3-3 3 3m0 0l3 3m-3-3l-3 3m0 0l-3-3m2 6h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2h10zm-4 0H8" />
+        </svg>
+        <label for="accountDeletion" class="text-lg font-medium text-gray-700">Delete Account</label>
+      </div>
+      <p class="text-sm text-red-500 mb-6">Warning: Deleting your account is permanent and cannot be undone.</p>
+      <button id="deleteAccountBtn" class="bg-red-600 text-white px-6 py-4 rounded-lg hover:bg-red-700 transition-all duration-300 w-full">Delete Account</button>
+
+      <!-- Close Button -->
+      <div class="mt-8">
+        <button id="closeSettingsBtn" class="bg-blue-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 transition-all duration-300 w-full">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // Check if the user is logged in
     const token = localStorage.getItem("token");
     if (!token) {
       alert("You must log in first");
       window.location.href = "index.html";
     }
+
+    // Logout button functionality
     document.getElementById("logoutBtn").addEventListener("click", () => {
       localStorage.removeItem("token");
       window.location.href = "index.html";
+    });
+
+    // Bar Chart UI Improvement
+    const barChartCtx = document.getElementById('myBarChart').getContext('2d');
+    const myBarChart = new Chart(barChartCtx, {
+      type: 'bar',
+      data: {
+        labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+        datasets: [{
+          label: 'Monthly Sales',
+          data: [12, 19, 3, 5, 2, 3],
+          backgroundColor: 'rgba(54, 162, 235, 0.6)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 2,
+          hoverBackgroundColor: 'rgba(54, 162, 235, 0.8)',
+          hoverBorderColor: 'rgba(54, 162, 235, 1)',
+          barThickness: 40
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: '#333',
+            titleColor: 'white',
+            bodyColor: 'white',
+            borderColor: 'rgba(0, 0, 0, 1)',
+            borderWidth: 1
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.1)',
+              lineWidth: 1
+            },
+            ticks: {
+              color: 'gray'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              color: 'gray'
+            }
+          }
+        }
+      }
+    });
+
+    // Line Chart UI Improvement
+    const lineChartCtx = document.getElementById('myLineChart').getContext('2d');
+    const myLineChart = new Chart(lineChartCtx, {
+      type: 'line',
+      data: {
+        labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+        datasets: [{
+          label: 'Website Traffic',
+          data: [50, 80, 120, 200, 150, 180],
+          backgroundColor: 'rgba(75, 192, 192, 0.3)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 3,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: 'rgba(75, 192, 192, 1)',
+          pointRadius: 6,
+          pointHoverBackgroundColor: '#fff',
+          pointHoverBorderColor: 'rgba(75, 192, 192, 1)',
+          lineTension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: '#333',
+            titleColor: 'white',
+            bodyColor: 'white',
+            borderColor: 'rgba(0, 0, 0, 1)',
+            borderWidth: 1
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.1)',
+              lineWidth: 1
+            },
+            ticks: {
+              color: 'gray'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              color: 'gray'
+            }
+          }
+        }
+      }
+    });
+
+    // Pie Chart UI Improvement
+    const pieChartCtx = document.getElementById('myPieChart').getContext('2d');
+    const myPieChart = new Chart(pieChartCtx, {
+      type: 'pie',
+      data: {
+        labels: ['Product A', 'Product B', 'Product C'],
+        datasets: [{
+          data: [300, 50, 100],
+          backgroundColor: ['#ff9999', '#66b3ff', '#99ff99'],
+          hoverBackgroundColor: ['#ff6666', '#3399ff', '#66ff66'],
+          borderColor: '#fff',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top'
+          },
+          tooltip: {
+            backgroundColor: '#333',
+            titleColor: 'white',
+            bodyColor: 'white',
+            borderColor: 'rgba(0, 0, 0, 1)',
+            borderWidth: 1
+          }
+        }
+      }
+    });
+
+    // Modal Settings
+    document.getElementById("settingsBtn").addEventListener("click", () => {
+      document.getElementById("settingsModal").classList.remove("hidden");
+    });
+
+    document.getElementById("closeSettingsBtn").addEventListener("click", () => {
+      document.getElementById("settingsModal").classList.add("hidden");
     });
   </script>
 </body>
