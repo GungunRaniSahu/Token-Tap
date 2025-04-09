@@ -1,22 +1,123 @@
-<!-- auth-frontend/pages/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Login</title>
-  <link rel="stylesheet" href="../css/style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class', 
+        }
+    </script>
+
+    
+    <link rel="icon" href="data:,">
 </head>
-<body>
-    <div class="container">
-        <button id="toggle-dark" class="dark-toggle">🌙</button>
-        <h2>Login</h2>      
-    <form id="loginForm">
-      <input type="email" id="loginEmail" placeholder="Email" required />
-      <input type="password" id="loginPassword" placeholder="Password" required />
-      <button type="submit">Login</button>
-    </form>
-    <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
-  </div>
-  <script src="../js/script.js"></script>
+
+<body class="bg-purple-100 dark:bg-gray-900 min-h-screen flex items-center justify-center transition-all duration-500">
+
+    <div class="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 transition-colors duration-500">
+        
+        <!-- Dark Mode Toggle Button -->
+        <button id="toggle-dark" class="absolute top-4 right-4 text-2xl">
+            🌙
+        </button>
+
+        <h2 class="text-3xl font-bold text-center text-purple-600 dark:text-purple-300 mb-6">
+            Login to Your Account
+        </h2>
+
+        <form class="space-y-4" id="loginForm">
+            <input 
+                type="email" 
+                placeholder="Email" 
+                required 
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                id="loginEmail"
+            />
+            <input 
+                type="password" 
+                placeholder="Password" 
+                required 
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                id="loginPassword"
+            />
+            <button 
+                type="submit" 
+                class="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-lg font-semibold transition duration-300"
+            >
+                Login
+            </button>
+        </form>
+
+        <p class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+            Don’t have an account? 
+            <a href="signup.html" class="text-purple-500 hover:underline">Sign Up</a>
+        </p>
+    </div>
+
+    <!-- Toggle Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const toggleBtn = document.getElementById("toggle-dark");
+            const html = document.documentElement;
+
+            const storedTheme = localStorage.getItem("theme");
+
+            
+            if (storedTheme === "dark") {
+                html.classList.add("dark");
+                toggleBtn.textContent = "🌙";  
+            } else {
+                html.classList.remove("dark");
+                toggleBtn.textContent = "☀️";  
+            }
+
+            toggleBtn.addEventListener("click", () => {
+                html.classList.toggle("dark");
+
+                const isDarkMode = html.classList.contains("dark");
+                localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+
+                toggleBtn.textContent = isDarkMode ? "🌙" : "☀️";
+            });
+        });
+
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+
+            console.log("Logging in with", email, password);
+
+            try {
+                const response = await fetch("http://localhost:5000/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await response.json();
+                console.log("Response:", data);
+
+                if (response.ok && data.token) {
+                    localStorage.setItem("token", data.token);
+                    console.log("Token saved:", data.token);
+                    window.location.href = "../pages/dashboard.html"; 
+                } else {
+                    alert(data.message || "Invalid credentials.");
+                }
+            } catch (err) {
+                console.error("Error:", err);
+                alert("Something went wrong!");
+            }
+        });
+    </script>
 </body>
 </html>
