@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         console.log("Signup form submitted!");
   
-        const name = document.getElementById("signupName").value;
+        const username  = document.getElementById("signupName").value;
         const email = document.getElementById("signupEmail").value;
         const password = document.getElementById("signupPassword").value;
   
@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const res = await fetch("http://localhost:5000/api/auth/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password }),
+            body: JSON.stringify({ username, email, password }),
           });
   
           const contentType = res.headers.get("content-type");
